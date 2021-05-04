@@ -1,14 +1,104 @@
 ---
 layout: post
-title:  Pullquotes
-categories: [HTML,Code]
-excerpt: In graphic design, a pull quote (also known as a lift-out pull quote) is a key phrase, quotation, or excerpt that has been pulled from an article and used as a page layout graphic element, serving to entice readers into the article or to highlight a key topic.
+title:  Thread Safety
+categories: [Thread,Concurrency]
 ---
 
-In graphic design, a pull quote (also known as a lift-out pull quote) is a key phrase, quotation, or excerpt that has been pulled from an article and used as a page layout graphic element, serving to entice readers into the article or to highlight a key topic. {% include pullquote.html quote="It is typically placed in a larger or distinctive typeface and on the same page." %} Pull quotes are often used in magazine and newspaper articles, annual reports, and brochures, as well as on the web. They can add visual interest to text-heavy pages with few images or illustrations.
+##### Terms
+State variable - Instance or static fields which stores the state of the object and can affect the object's externally visible behaviour. 
+Shared state - A variable that can be accessed by multiple threads.
+Mutable - variable's value that could change during its lifetime.
+Invariant - It is a logical assertion that is held to always be true during a certain phase of execution. For example - a binary search tree has the following invariant: For any node n, every node in the left subtree of n has a value less than n's value, and every node in the right subtree of n has a value greater than n's value. We call that the BST invariant.
+Reentrancy - If a thread tries to acquire a lock that it already holds, the request succeeds. This is due to reentrancy. It is implemented by associating with each lock an acquisition count and an owning thread. When the acquisition count becomes zero, the lock is released. An unheld lock can be then acquired by a different thread.
 
-Placement of a pull quote on a page may be defined in a publication's or website's style guide. Such a typographic device may or may not be aligned with a column on the page. Some designers, for example, choose not to align the quote. In that case, the quotation cuts into two or more columns, as in the example shown. Because the pull quote invites the reader to read about the highlighted material, the pull quote should appear before the text it cites and, generally, fairly close to it.
+##### Three ways to ensure thread safety:
+* Do not share state variables across threads
+* Make the state variable immutable
+* Use synchronization whenever accessing state variables
 
-Pull quotes need not be a verbatim copy of the text being quoted; depending on a publication's house style, pull quotes may be abbreviated for space or paraphrased for clarity, with or without indication.
+##### Things to note:
 
-A disadvantage of pull quotes as a design element is that they can disrupt the reading process of readers invested in reading the text sequentially by drawing attention to ghost fragments out of context. At the other extreme, when pull quotes are used to break up what would otherwise be a formless wall of text, pull quote can serve as visual landmarks to help the reader maintain a sense of sequence and place.
+* Atomicity - Beware of the following operations prone to race conditions: 
+  1. read-modify-write
+      ```
+      @NotThreadSafe
+      public class Counter {
+        private long count = 0;
+
+        public long getCount() {...}
+        public void update() {
+         ...
+         count++;   // read-modify-write opration: fetch the current value, add one to it, write the new value back.
+        }
+      }
+      ```
+      Possible solutions to ensure thread safety: Use AtomicLong, or use synchronized keyword on update
+
+  2. check-then-act 
+      ```
+      @NotThreadSafe
+      public class Singleton() {
+        private static Singleton instance;
+
+        private Singleton() {..}
+
+        public Singleton getInstance() {
+          if (instance == null) {         // check-then-act operation
+            instance = new Singleton();
+          }
+          return instance;
+        }
+      }
+      ```
+      Possible solution: Add synchronized keyword to method or instance variable.
+      
+  3. Compound actions - related state variables A and B are atomic individually, but may not be atomic with respect to each other.
+      ```
+      // Invariant: child age < mom age, child age < dad age
+      @NotThreadSafe
+      public class FamilyAgeCounter {
+        private AtomicLong childAge;
+        private AtomicLong momAge;
+        private AtomicLong dadAge;
+
+        public long[] getAges() {...}
+        public void afterXYears(int x) {
+         ...
+         childAge += x;
+         momAge += x;
+         dadAge += x;
+         ...
+        }
+      }    
+      ```
+      Even though childAge(10), momAge(35)  and dadAge(35) are individually atomic, there is a window where thread A calls afterXYears(30) and childAge is updated(40), but momAge(35) and dadAge(35) are not updated, thread B calling getAges() during the window will see that the invariant does not hold.
+
+      Solution: Update related state variables in a single atomic operation.
+      ```
+      // Invariant: child age < mom age, child age < dad age
+      @ThreadSafe
+      public class FamilyAgeCounter {
+        private AtomicLong childAge;
+        private AtomicLong momAge;
+        private AtomicLong dadAge;
+
+        public synchronized long[] getAges() {...}
+        public void afterXYears(int x) {
+         ...
+         synchronized(this) {
+           childAge += x;
+           momAge += x;
+           dadAge += x;
+         }
+         ...
+        }
+      }    
+      ```
+  4. fdfds
+
+##### Common mistakes:
+
+1. Getters do not need synchronization: It is a common mistake to assume that synchronization needs to be used only when writing to shared variables; this is simply not true.
+
+For each mutable state variable that may be accessed by more than one thread, **all accesses** to that variable must be performed with the same lock held. In this case, we say that the variable is guarded by that lock.
+      
