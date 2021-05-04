@@ -5,15 +5,15 @@ categories: [Thread,Concurrency]
 ---
 
 ##### Terms
-State variable - Instance or static fields which stores the state of the object and can affect the object's externally visible behaviour. 
-Shared state - A variable that can be accessed by multiple threads.
-Mutable - variable's value that could change during its lifetime.
-Invariant - It is a logical assertion that is held to always be true during a certain phase of execution. For example - a binary search tree has the following invariant: For any node n, every node in the left subtree of n has a value less than n's value, and every node in the right subtree of n has a value greater than n's value. We call that the BST invariant.
-Reentrancy - If a thread tries to acquire a lock that it already holds, the request succeeds. This is due to reentrancy. It is implemented by associating with each lock an acquisition count and an owning thread. When the acquisition count becomes zero, the lock is released. An unheld lock can be then acquired by a different thread.
+**State variable** - Instance or static fields which stores the state of the object and can affect the object's externally visible behaviour. 
+**Shared state** - A variable that can be accessed by multiple threads.
+**Mutable** - variable's value that could change during its lifetime.
+**Invariant** - It is a logical assertion that is held to always be true during a certain phase of execution. For example - a binary search tree has the following invariant: For any node n, every node in the left subtree of n has a value less than n's value, and every node in the right subtree of n has a value greater than n's value. We call that the BST invariant.
+**Reentrancy** - If a thread tries to acquire a lock that it already holds, the request succeeds. This is due to reentrancy. It is implemented by associating with each lock an acquisition count and an owning thread. When the acquisition count becomes zero, the lock is released. An unheld lock can be then acquired by a different thread.
 
 ##### Three ways to ensure thread safety:
-* Do not share state variables across threads
-* Make the state variable immutable
+* Do not share state variables across threads OR
+* Make the state variable immutable OR
 * Use synchronization whenever accessing state variables
 
 ##### Things to note:
