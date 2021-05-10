@@ -98,7 +98,20 @@ categories: [Thread,Concurrency]
 
 ##### Common mistakes:
 
-1. Getters do not need synchronization: It is a common mistake to assume that synchronization needs to be used only when writing to shared variables; this is simply not true.
+**Mistake 1**: Getters do not need synchronization
+It is a common mistake to assume that synchronization needs to be used only when writing to shared variables; this is simply not true.
 
 For each mutable state variable that may be accessed by more than one thread, **all accesses** to that variable must be performed with the same lock held. In this case, we say that the variable is guarded by that lock.
-      
+
+**Mistake 2**: As long as each mutable state is guarded by a lock, the code is thread safe
+For every invariant that involves more than 1 variable, **all** the variables involved in that invariant must be guarded by the **same** lock.
+
+**Mistake 3**: Concurrent collections do not need additional synchronization
+```
+if(!vector.contains(element))
+  vector.add(element)
+```
+Even though vector provides thread safe methods, a race condition such as above (put-if-absent), which contains an atomicity violation bug.
+
+<img width="459" alt="Fixes for race conditions on concurrent collections" src="https://user-images.githubusercontent.com/44378362/117681504-2a631980-b180-11eb-80dc-091378410832.png">
+
