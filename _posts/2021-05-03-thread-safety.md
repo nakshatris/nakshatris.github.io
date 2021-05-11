@@ -235,5 +235,6 @@ if(!vector.contains(element))
   vector.add(element)
 ```
 Even though vector provides thread safe methods, a race condition such as above (put-if-absent), which contains an atomicity violation bug. Some fixes include the below:
+
 [Source credits link](http://dig.cs.illinois.edu/papers/checkThenAct.pdf)
 <img width="459" alt="Fixes for race conditions on concurrent collections" src="https://user-images.githubusercontent.com/44378362/117681504-2a631980-b180-11eb-80dc-091378410832.png">
