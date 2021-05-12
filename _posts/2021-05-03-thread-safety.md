@@ -4,6 +4,8 @@ title:  Thread Safety
 categories: [Thread,Concurrency]
 ---
 
+This post contains the important points from the book *Java Concurrency in Practice* by *Brian Goetz*
+
 ##### Terms
 **State variable** - Instance or static fields which stores the state of the object and can affect the object's externally visible behaviour. 
 **Shared state** - A variable that can be accessed by multiple threads.
@@ -148,6 +150,7 @@ categories: [Thread,Concurrency]
    * Its state cannot be mofified after construction;
    * All its fields are final; (its possible without this, but very very hard); and 
    * It is properly constructed (the *this* reference does not escape during contruction)
+  
   Immutable objects are hard to create however:
   For example, the below does not satisfy the first condition above: 
   ```
@@ -218,6 +221,34 @@ categories: [Thread,Concurrency]
     }
   }
   ```
+  * Use composition (if possible) to extend existing classes
+  ```
+  public class ImprovedList<T> implements List<T> {
+    private final List<T> list;
+    public ImprovedList(List<T> list) { this.list = list; }
+    public synchronized void putIfAbsent(T x) {
+      if (!list.contains(x)) {
+        list.add(x);
+    }
+    public synchronized void clear() { list.clear(); }
+    ... // other list methods delegated to the underlying list
+  }
+  ```
+  * Use locking or clone collection during iteration: When we use iterators as below, javac internally repeatedly calls hasNext and next to iterate the list, which constitutes for a compound action. Also, if the collection has changed since the iteration began, the iterators throw ConcurrentmodificationException. To avoid this, lock the collection during iteration. However, this could introduce performance, starvation and deadlock risks. An alternative is to clone the collection and perform the iteration.
+  ```
+  private List<String> list = Collections.synchronizedList(new ArrayList<String>());
+  for (String s: list) {
+    doSomething(s);
+  }
+  ```
+  Beware of hidden iterators such as 
+  ```
+  System.out.println("Elements in list are:" + list);
+  ```
+  Alternatively, you could use concurrent collections such as *ConcurrentHashMap*, *CopyOnWriteArraylist*, *ConcurrentLinkedQueue*
+  * Use concurrent collections instead of synchronized collections.
+  
+  
 
 ##### Common mistakes:
 
@@ -238,3 +269,33 @@ Even though vector provides thread safe methods, a race condition such as above 
 
 [Source credits link](http://dig.cs.illinois.edu/papers/checkThenAct.pdf)
 <img width="459" alt="Fixes for race conditions on concurrent collections" src="https://user-images.githubusercontent.com/44378362/117681504-2a631980-b180-11eb-80dc-091378410832.png">
+
+**Mistake 4**: Incorrect client side locking. 
+The problem below is that it synchronizes the method on the wrong lock.
+```
+@NotThreadSafe
+public class ListHelper<E> {
+  public List<E> list = Collections.synchronizedList(new ArrayList<E>());
+  ...
+  public synchronized void putIfAbsent(E x) {
+    if (!list.contains(x)) {
+      list.add(x);
+    }
+  }
+}
+```
+One potential correct approach is as below:
+```
+@ThreadSafe
+public class ListHelper<E> {
+  public List<E> list = Collections.synchronizedList(new ArrayList<E>());
+  ...
+  public void putIfAbsent(E x) {
+    synchronized(list) {
+      if (!list.contains(x)) {
+        list.add(x);
+      }
+    }
+  }
+}
+```
