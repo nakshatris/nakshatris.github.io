@@ -17,7 +17,7 @@ categories: [Kafka, DS]
 - **Offset management**: When a new group is created, the group uses the offset reset policy *auto.offset.reset* to determine the offset position. Typycally, it 
   is either latest offset or earliest offset. Correct offset management is crucial because it affects **delivery semantics**.
   
-###Kafka producer delivery semantics
+### Kafka producer delivery semantics
 
 **At-least once**: Each message is published into Kafka at least once, which means there might be duplicates. 
 When the producer receives an ACK from the Kafka broker, it means that the broker has received the message. This can be done by setting ACK value > 0. If the topic han been configured to have replication, then setting ACK = 1 will only wait for an acknowledgement from one of the replicas. This can still lead to data loss once its published if the message is not successfully replicated (leader broker goes down before replication, the other brokers will not get the data). 
