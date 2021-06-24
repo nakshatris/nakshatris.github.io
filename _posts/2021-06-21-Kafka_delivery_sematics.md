@@ -4,7 +4,7 @@ title:  Kafka delivery semantics
 categories: [Kafka, DS]
 ---
 
-###Concepts
+### Concepts
 - **Broker**: Kafka is run as a cluster of one or more servers that can span multiple datacenters or cloud regions. Some of these servers form the storage layer, 
   called the brokers. The other servers run Kafka connect to continuously import/export data.
 - **Consumer group**: Set of consumers which cooperate to consume from some topics. The partitions of all topics are divided amongst the consumers of the group. 
@@ -31,7 +31,7 @@ This is equivalent to set-and-forget technique, where the producer sends the mes
 #####How it works 
 When a producer retries on error, the same message — which is still sent by the producer multiple times — will only be written to the Kafka log on the broker once. This is because each message will now hold a sequence number which will be used for de-duplication. This sequence number is persisted to replicated log, even if the leader broker crashes, the log is not lost.
   
-###Kafka consumer delivery semantics
+### Kafka consumer delivery semantics
 
 **At-least once**: Every message is processed, but duplicate processing is possible. This is the default configuration.
 By default, a consumer is configured for auto commit. Auto commit works as cron job which periodically commits the offset on a regualr interval set using *auto.commit.offset.ms* (default - 5s). In such cases, if the consumer crashes, after rebalance, the new consumer picks messages from the last committed offset, which could be as old as the auto commit interval, causing duplication.
